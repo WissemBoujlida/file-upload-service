@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: file-upload-service
+  config:
+    import: file:.env[.properties]
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  jpa:
+    show-sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    baseline-on-migrate: true
+    baseline-description: "init"
+    baseline-version: 0
+
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        # security measure to inform consumer about message payload type
+        # trust package com.service.file.upload.s3.dto.event
+        # token : Java full classname
+        spring.json.type.mapping: fileReadyEventPayload:com.service.file.upload.s3.dto.event.FileReadyEventPayload
+
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: file-metadata
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.type.mapping: fileReadyEventPayload:com.service.file.upload.s3.dto.event.FileReadyEventPayload
+        spring.json.trusted.packages: '*'
+
+awss3:
+  host: http://localhost:9000
+  region: us-east-1
+  access-key: ${RUSTFS_ACCESS_KEY}
+  secret-key: ${RUSTFS_SECRET_KEY}
+  public-bucket: "public-test"
+  private-bucket: "private-test"
+  webhook-auth-token: ${RUSTFS_WEBHOOK_AUTH_TOKEN}
+  presign-signature-duration: 10 # minutes
+  max-file-size: 20971520 #Bytes (20MB)
+  max-part-size: 10485760 #Bytes (10MB)
+
+cloudflare:
+  api-token: ${CLOUDFLARE_API_TOKEN}
+  zone-id: ${CLOUDFLARE_ZONE_ID}
+  cdn-base-url: ${CLOUDFLARE_CDN_BASE_URL}
