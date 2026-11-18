@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class S3Controller {
     private final S3Service s3Service;
 
-    @GetMapping("/files/{fileId}/presigned-download-url")
+    @GetMapping("/files/{fileId}/presigned-download-urls")
     public ResponseEntity<GeneratePresignedDownloadUrlResponse> getPresignedDownloadUrl(
             @PathVariable Long fileId
     ) {
